@@ -10,11 +10,15 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
-        body, html {
+        html, body {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
+            overflow: hidden; 
+        }
+
+        body {
             display: flex;
             flex-direction: column;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -22,14 +26,15 @@
 
         header {
             background: linear-gradient(135deg, #1e7e34, #ffffff);
-            padding: 15px 20px;
+            padding: 12px 20px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
             z-index: 1000;
+            flex-shrink: 0; 
         }
         
         header h1 {
             margin: 0;
-            font-size: 24px;
+            font-size: 20px;
             color: #1e7e34;
             text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
             direction: ltr;
@@ -37,8 +42,10 @@
         }
 
         #map {
-            flex: 1;
+            flex-grow: 1;
+            flex-shrink: 1;
             width: 100%;
+            height: 100%;
         }
 
         footer {
@@ -46,29 +53,25 @@
             border-top: 1px solid #dee2e6;
             padding: 8px 20px;
             text-align: center;
-            font-size: 14px;
+            font-size: 13px;
             color: #6c757d;
             z-index: 1000;
             direction: ltr;
+            flex-shrink: 0; 
         }
 
         .locate-button {
             background-color: #fff;
             border: 2px solid rgba(0,0,0,0.2);
             border-radius: 4px;
-            width: 34px;
-            height: 34px;
+            width: 36px;
+            height: 36px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 16px;
+            font-size: 18px;
             color: #333;
-            transition: background-color 0.3s;
-        }
-        .locate-button:hover {
-            background-color: #f4f4f4;
-            color: #007bff;
         }
     </style>
 </head>
@@ -85,7 +88,8 @@
     </footer>
 
     <script>
-        const map = L.map('map').setView([30.42, -9.58], 14);
+        // 1. تصحيح المركز الافتراضي الافتتاحي ليطابق إحداثيات أكادير وحي رياض السلام بدقة [30.406, -9.575]
+        const map = L.map('map').setView([30.406, -9.575], 14);
 
         L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
             maxZoom: 20,
@@ -106,26 +110,33 @@
                     style: function (feature) {
                         return {
                             color: '#ff0000',
-                            weight: 6,
+                            weight: 5,         
                             opacity: 1.0, 
                             fillColor: '#ff0000',
-                            fillOpacity: 0.1
+                            fillOpacity: 0.15
                         };
                     },
                     onEachFeature: function (feature, layer) {
-                        const name = (feature.properties && feature.properties.name) ? feature.properties.name : "حي رياض السلام";
-                        layer.bindPopup(name);
+                        // حل مشكلة النصوص المشوهة وعرض الاسم العربي الصحيح للحي الإداري بملفك
+                        let popupText = "حي رياض السلام والحي الإداري";
+                        if (feature.properties && feature.properties.Quartier) {
+                            popupText = `<b>${feature.properties.Quartier}</b><br>Arrond: Agadir Centre`;
+                        }
+                        layer.bindPopup(popupText);
                     }
                 }).addTo(map);
 
+                // إجبار الخريطة على تحديث أبعادها واحتواء نطاق الحي بدقة هندسية تناسب شاشات الهواتف
                 setTimeout(() => {
-                    map.fitBounds(riadSalamLayer.getBounds());
-                }, 200);
+                    map.invalidateSize();
+                    map.fitBounds(riadSalamLayer.getBounds(), { padding: [30, 30] });
+                }, 300);
             })
             .catch(error => {
                 console.error('حدث خطأ أثناء جلب ملف GeoJSON:', error);
             });
 
+        // زر تحديد الموقع الحالي
         const LocateControl = L.Control.extend({
             options: { position: 'topleft' },
             onAdd: function (map) {

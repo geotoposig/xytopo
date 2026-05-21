@@ -11,16 +11,52 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
+        /* إعدادات الصفحة الأساسية لتوزيع العناصر عمودياً */
         body, html {
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
+
+        /* تنسيق الهيدر المتدرج بالأخضر والأبيض */
+        header {
+            background: linear-gradient(135deg, #1e7e34, #ffffff);
+            padding: 15px 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000; /* ليبقى فوق الخريطة */
+        }
+        
+        header h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #1e7e34; /* لون النص الأساسي */
+            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+            direction: ltr; /* لعرض النص اللاتيني بشكل صحيح */
+            text-align: left;
+        }
+
+        /* تنسيق الخريطة لتملأ المساحة المتبقية */
         #map {
-            height: 100%;
+            flex: 1;
             width: 100%;
         }
+
+        /* تنسيق الفوتر */
+        footer {
+            background-color: #f8f9fa;
+            border-top: 1px solid #dee2e6;
+            padding: 8px 20px;
+            text-align: center;
+            font-size: 14px;
+            color: #6c757d;
+            z-index: 1000;
+            direction: ltr;
+        }
+
         /* تنسيق زر الموقع الحالي */
         .locate-button {
             background-color: #fff;
@@ -44,21 +80,31 @@
 </head>
 <body>
 
+    <!-- الهيدر المضاف -->
+    <header>
+        <h1>Limite Quartier  Ryad Salam</h1>
+    </header>
+
+    <!-- مساحة الخريطة -->
     <div id="map"></div>
 
+    <!-- الفوتر المضاف -->
+    <footer>
+        realise par : Jilit
+    </footer>
+
     <script>
-        // 1. تهيئة الخريطة وتحديد مركز افتراضي (سيتم تحديثه تلقائياً ليتناسب مع الطبقة)
+        // 1. تهيئة الخريطة وتحديد مركز افتراضي
         const map = L.map('map').setView([30.42, -9.58], 14);
 
-       // إضافة خلفية قمر صناعي من جوجل مدمجة مع الأسماء والخطوط (Google Hybrid)
-const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-    maxZoom: 20,
-    subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
-    attribution: '&copy; Google Maps'
-}).addTo(map);
+        // إضافة خلفية قمر صناعي من جوجل مدمجة مع الأسماء والخطوط (Google Hybrid)
+        const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+            maxZoom: 20,
+            subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+            attribution: '&copy; Google Maps'
+        }).addTo(map);
 
         // 3. جلب وعرض طبقة GeoJSON باللون الأحمر مع حل مشكلة الـ CORS
-        // قمنا بإضافة بروكسب آمن مشهور (cors-anywhere بديل أو allorigins) لتخطي حظر المتصفح
         const originalUrl = 'https://map.geotoposig.com/riad_salam.geojson';
         const geojsonUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(originalUrl);
 
@@ -73,14 +119,14 @@ const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z
                 // تنسيق الطبقة باللون الأحمر
                 const riadSalamLayer = L.geoJSON(data, {
                     style: function (feature) {
-                        return {
-                            color: '#ff0000',       // لون الحدود (أحمر)
-                            weight: 3,              // سمك الحدود
-                            opacity: 0.8,           // شفافية الحدود
-                            fillColor: '#ff0000',   // لون التعبئة (أحمر)
-                            fillOpacity: 0.35       // شفافية التعبئة
-                        };
-                    },
+    return {
+        color: '#ff0000',       // لون الحدود (أحمر)
+        weight: 6,              // زيادة سمك الحدود (تم رفعه من 3 إلى 6 ليكون بارزاً)
+        opacity: 5.0,           // شفافية الحدود كاملة وبدون بهتان
+        fillColor: '#ff0000',   // لون التعبئة الداخلي (أحمر)
+        fillOpacity: 0.1        // تقليل شفافية التعبئة لجعل التركيز أكبر على الحدود السميكة
+    };
+},
                     onEachFeature: function (feature, layer) {
                         if (feature.properties && feature.properties.name) {
                             layer.bindPopup(feature.properties.name);
@@ -97,7 +143,6 @@ const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z
             })
             .catch(error => {
                 console.error('حدث خطأ أثناء جلب ملف GeoJSON:', error);
-                // حل بديل في حال استمر الخطأ: تنبيه المطور في وحدة التحكم
                 alert("تنبيه: تأكد من رفع ملف الـ geojson على نفس مستودع GitHub الخاص بك لتجنب مشاكل النطاقات الخارجية.");
             });
 

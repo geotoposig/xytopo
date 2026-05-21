@@ -7,11 +7,9 @@
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
     <style>
-        /* إعدادات الصفحة الأساسية لتوزيع العناصر عمودياً */
         body, html {
             margin: 0;
             padding: 0;
@@ -22,30 +20,27 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
-        /* تنسيق الهيدر المتدرج بالأخضر والأبيض */
         header {
             background: linear-gradient(135deg, #1e7e34, #ffffff);
             padding: 15px 20px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 1000; /* ليبقى فوق الخريطة */
+            z-index: 1000;
         }
         
         header h1 {
             margin: 0;
             font-size: 24px;
-            color: #1e7e34; /* لون النص الأساسي */
+            color: #1e7e34;
             text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
-            direction: ltr; /* لعرض النص اللاتيني بشكل صحيح */
+            direction: ltr;
             text-align: left;
         }
 
-        /* تنسيق الخريطة لتملأ المساحة المتبقية */
         #map {
             flex: 1;
             width: 100%;
         }
 
-        /* تنسيق الفوتر */
         footer {
             background-color: #f8f9fa;
             border-top: 1px solid #dee2e6;
@@ -57,7 +52,6 @@
             direction: ltr;
         }
 
-        /* تنسيق زر الموقع الحالي */
         .locate-button {
             background-color: #fff;
             border: 2px solid rgba(0,0,0,0.2);
@@ -80,73 +74,58 @@
 </head>
 <body>
 
-    <!-- الهيدر المضاف -->
     <header>
-        <h1>Limite Quartier  Ryad Salam</h1>
+        <h1>Limite Quartier Ryad Salam</h1>
     </header>
 
-    <!-- مساحة الخريطة -->
     <div id="map"></div>
 
-    <!-- الفوتر المضاف -->
     <footer>
         realise par : Jilit
     </footer>
 
     <script>
-        // 1. تهيئة الخريطة وتحديد مركز افتراضي
         const map = L.map('map').setView([30.42, -9.58], 14);
 
-        // إضافة خلفية قمر صناعي من جوجل مدمجة مع الأسماء والخطوط (Google Hybrid)
-        const googleHybrid = L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+        L.tileLayer('https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
             maxZoom: 20,
             subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
             attribution: '&copy; Google Maps'
         }).addTo(map);
 
-        // 3. جلب وعرض طبقة GeoJSON باللون الأحمر مع حل مشكلة الـ CORS
-const originalUrl = 'https://map.geotoposig.com/riad_salam.geojson';
+        const originalUrl = 'https://map.geotoposig.com/riad_salam.geojson';
         const geojsonUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(originalUrl);
 
         fetch(geojsonUrl)
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
-                }
+                if (!response.ok) throw new Error('Network response was not ok');
                 return response.json();
             })
             .then(data => {
-                // تنسيق الطبقة باللون الأحمر
                 const riadSalamLayer = L.geoJSON(data, {
                     style: function (feature) {
-    return {
-        color: '#ff0000',       // لون الحدود (أحمر)
-        weight: 6,              // زيادة سمك الحدود (تم رفعه من 3 إلى 6 ليكون بارزاً)
-        opacity: 5.0,           // شفافية الحدود كاملة وبدون بهتان
-        fillColor: '#ff0000',   // لون التعبئة الداخلي (أحمر)
-        fillOpacity: 0.1        // تقليل شفافية التعبئة لجعل التركيز أكبر على الحدود السميكة
-    };
-},
+                        return {
+                            color: '#ff0000',
+                            weight: 6,
+                            opacity: 1.0, 
+                            fillColor: '#ff0000',
+                            fillOpacity: 0.1
+                        };
+                    },
                     onEachFeature: function (feature, layer) {
-                        if (feature.properties && feature.properties.name) {
-                            layer.bindPopup(feature.properties.name);
-                        } else {
-                            layer.bindPopup("حي رياض السلام");
-                        }
+                        const name = (feature.properties && feature.properties.name) ? feature.properties.name : "حي رياض السلام";
+                        layer.bindPopup(name);
                     }
                 }).addTo(map);
 
-                // عمل Zoom تلقائي ليتناسب مع حجم وموقع الطبقة المجلوبة بدقة
                 setTimeout(() => {
                     map.fitBounds(riadSalamLayer.getBounds());
                 }, 200);
             })
             .catch(error => {
                 console.error('حدث خطأ أثناء جلب ملف GeoJSON:', error);
-                alert("تنبيه: تأكد من رفع ملف الـ geojson على نفس مستودع GitHub الخاص بك لتجنب مشاكل النطاقات الخارجية.");
             });
 
-        // 4. إضافة زر "موقعي الحالي" المخصص
         const LocateControl = L.Control.extend({
             options: { position: 'topleft' },
             onAdd: function (map) {
@@ -174,7 +153,7 @@ const originalUrl = 'https://map.geotoposig.com/riad_salam.geojson';
                 });
 
                 map.on('locationerror', function (e) {
-                    alert("تعذر تحديد موقعك الحالي: " + e.message);
+                    console.error("تعذر تحديد الموقع الحالي:", e.message);
                 });
 
                 return container;

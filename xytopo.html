@@ -105,7 +105,7 @@
         }).addTo(map);
 
         // 3. جلب وعرض طبقة GeoJSON باللون الأحمر مع حل مشكلة الـ CORS
-        const originalUrl = 'https://map.geotoposig.com/riad_salam.geojson';
+const originalUrl = 'https://map.geotoposig.com/riad_salam.geojson';
         const geojsonUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(originalUrl);
 
         fetch(geojsonUrl)
